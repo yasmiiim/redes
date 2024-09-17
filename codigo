@@ -1,0 +1,96 @@
+using System;
+using System.Net.Sockets;
+using System.Text;
+
+class TicTacToeClient
+{
+    static void Main(string[] args)
+    {
+        string serverIp = "127.0.0.1"; // IP do servidor
+        int serverPort = 13000;        // Porta do servidor
+        TcpClient client = null;
+        NetworkStream stream = null;
+
+        try
+        {
+            // Conectar ao servidor
+            client = new TcpClient(serverIp, serverPort);
+            stream = client.GetStream();
+            Console.WriteLine("Conectado ao servidor.");
+
+            // Receber a identificação do jogador
+            byte[] buffer = new byte[8];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            string playerId = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+            Console.WriteLine($"Você é o Jogador {playerId}");
+
+            // Loop de jogo
+            bool gameEnded = false;
+            while (!gameEnded)
+            {
+                // Receber o estado atual do tabuleiro e o status do jogo
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+                string boardState = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+                if (boardState.Length >= 9)
+                {
+                    DisplayBoard(boardState.Substring(0, 9));
+
+                    // Verificar resultado
+                    string result = boardState.Length > 9 ? boardState.Substring(9) : "";
+                    if (result == "1")
+                    {
+                        Console.WriteLine("Você venceu!");
+                        gameEnded = true;
+                    }
+                    else if (result == "2")
+                    {
+                        Console.WriteLine("Você perdeu!");
+                        gameEnded = true;
+                    }
+                    else if (result == "3")
+                    {
+                        Console.WriteLine("Empate!");
+                        gameEnded = true;
+                    }
+                }
+
+                // Solicitar a jogada do usuário se o jogo não terminou
+                if (!gameEnded)
+                {
+                    Console.Write("Digite a posição (1-9): ");
+                    string move = Console.ReadLine();
+                    byte[] moveBuffer = Encoding.UTF8.GetBytes(move);
+                    stream.Write(moveBuffer, 0, moveBuffer.Length);
+
+                    // Receber a confirmação da jogada
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    string confirmation = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+
+                    if (confirmation == "-1")
+                    {
+                        Console.WriteLine("Jogada inválida, tente novamente.");
+                    }
+                }
+            }
+
+            // Fechar a conexão
+            stream.Close();
+            client.Close();
+            Console.WriteLine("Conexão encerrada.");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Exception: {e.Message}");
+        }
+    }
+
+    static void DisplayBoard(string board)
+    {
+        Console.Clear();
+        Console.WriteLine($" {board[0]} | {board[1]} | {board[2]} ");
+        Console.WriteLine("---|---|---");
+        Console.WriteLine($" {board[3]} | {board[4]} | {board[5]} ");
+        Console.WriteLine("---|---|---");
+        Console.WriteLine($" {board[6]} | {board[7]} | {board[8]} ");
+    }
+}
