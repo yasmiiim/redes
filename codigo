@@ -6,8 +6,8 @@ class TicTacToeClient
 {
     static void Main(string[] args)
     {
-        string serverIp = "127.0.0.1"; // IP do servidor
-        int serverPort = 13000;        // Porta do servidor
+        string serverIp = "127.0.0.1";
+        int serverPort = 13000;
         TcpClient client = null;
         NetworkStream stream = null;
 
